@@ -2,8 +2,9 @@ from Field import Field
 
 
 class Sudoku:
-
     def __init__(self, filename):
+        self.NO_ROWS: int = 9
+        self.NO_COLS: int = 9
         self.board = self.read_sudoku(filename)
 
     def __str__(self):
@@ -49,6 +50,34 @@ class Sudoku:
 
         Sudoku.add_neighbours(grid)
         return grid
+    
+    def add_neighbours_of_a_field(self, grid: Field[[]], row_index: int, col_index: int):
+        """
+        Adds the neighbours of a given field f, f is given as its indices in the grid.
+        Neighbors include cells in the same row, column, and 3x3 block.
+        """
+        n = []
+
+        # Add neighbors in the same row
+        for col in range(self.NO_COLS):
+            if col != col_index:  # Exclude  itself
+                n.append(grid[row_index][col])
+
+        # Add neighbors in the same column
+        for row in range(self.NO_ROWS):
+            if row != row_index:  # Exclude itself
+                n.append(grid[row][col_index])
+
+        # Add neighbors in the same 3x3 block
+        block_row_start = (row_index // 3) * 3
+        block_col_start = (col_index // 3) * 3
+        for i in range(block_row_start, block_row_start + 3):
+            for j in range(block_col_start, block_col_start + 3):
+                if i != row_index or j != col_index:  # Exclude itself
+                    n.append(grid[i][j])
+
+        grid[row_index][col_index].set_neighbours(n)
+
 
     @staticmethod
     def add_neighbours(grid):
@@ -56,8 +85,9 @@ class Sudoku:
         Adds a list of neighbors to each field
         @param grid: 9x9 list of Fields
         """
-
-    # TODO: for each field, add its neighbors
+        for row in range(0,9):
+            for col in range(0,9):
+                Sudoku.add_neighbours_of_a_field(grid, row, col)
 
     def board_to_string(self):
 
