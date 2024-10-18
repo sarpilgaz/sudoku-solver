@@ -50,34 +50,6 @@ class Sudoku:
 
         Sudoku.add_neighbours(grid)
         return grid
-    
-    def add_neighbours_of_a_field(self, grid: Field[[]], row_index: int, col_index: int):
-        """
-        Adds the neighbours of a given field f, f is given as its indices in the grid.
-        Neighbors include cells in the same row, column, and 3x3 block.
-        """
-        n = []
-
-        # Add neighbors in the same row
-        for col in range(self.NO_COLS):
-            if col != col_index:  # Exclude  itself
-                n.append(grid[row_index][col])
-
-        # Add neighbors in the same column
-        for row in range(self.NO_ROWS):
-            if row != row_index:  # Exclude itself
-                n.append(grid[row][col_index])
-
-        # Add neighbors in the same 3x3 block
-        block_row_start = (row_index // 3) * 3
-        block_col_start = (col_index // 3) * 3
-        for i in range(block_row_start, block_row_start + 3):
-            for j in range(block_col_start, block_col_start + 3):
-                if i != row_index or j != col_index:  # Exclude itself
-                    n.append(grid[i][j])
-
-        grid[row_index][col_index].set_neighbours(n)
-
 
     @staticmethod
     def add_neighbours(grid):
@@ -87,7 +59,26 @@ class Sudoku:
         """
         for row in range(0,9):
             for col in range(0,9):
-                Sudoku.add_neighbours_of_a_field(grid, row, col)
+                n = []
+                # Add neighbors in the same row
+                for col_i in range(9):
+                    if col_i != col:  # Exclude  itself
+                        n.append(grid[row][col_i])
+
+                # Add neighbors in the same column
+                for row_i in range(9):
+                    if row_i != row:  # Exclude itself
+                        n.append(grid[row_i][col])
+
+                # Add neighbors in the same 3x3 block
+                block_row_start = (row // 3) * 3
+                block_col_start = (col // 3) * 3
+                for i in range(block_row_start, block_row_start + 3):
+                    for j in range(block_col_start, block_col_start + 3):
+                        if i != row or j != col:  # Exclude itself
+                            n.append(grid[i][j])
+                    
+                grid[row][col].set_neighbours(n)
 
     def board_to_string(self):
 
