@@ -7,7 +7,7 @@ class Game:
     def __init__(self, sudoku):
         self.arc_queue = Queue()
         self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
-        self.h_type = 0 # use -1 if you want no heuristic
+        self.h_type = -1 # use -1 if you want no heuristic
         self.sudoku = sudoku
 
     def set_heuristic_type(self, h):
@@ -97,6 +97,7 @@ class Game:
     def put_neighbours_in_queue(self, field):
         """
         Function puts all neighbours of a field into the arc_queue as the tuple (neighbour, field)
+        currently puts duplicate arcs in queue
         """
         neighbours = field.get_neighbours()
         for n in neighbours:

@@ -75,9 +75,9 @@ class Sudoku:
                 block_col_start = (col // 3) * 3
                 for i in range(block_row_start, block_row_start + 3):
                     for j in range(block_col_start, block_col_start + 3):
-                        if i != row or j != col:  # Exclude itself
+                        if (i != row or j != col) and grid[i][j] not in n:  # Exclude itself
                             n.append(grid[i][j])
-                    
+                            
                 grid[row][col].set_neighbours(n)
 
     def board_to_string(self):

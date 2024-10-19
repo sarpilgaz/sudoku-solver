@@ -33,8 +33,8 @@ class Field:
     # This is the exact behaviour we want, and it is always deterministic.
 
 
-    def __eq__(self, other):
-        return self.priority == other.priority
+    #def __eq__(self, other):
+        #return self.priority == other.priority
     
     #endregion
 
