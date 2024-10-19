@@ -7,6 +7,8 @@ class Field:
         self.domain = []
         # A list of all the fields that this field is constrained by
         self.neighbours = []
+        self.priority = -1 #used in case heuristics are requested during the AC-3 algorithm
+
 
         # Constructor in case the field is unknown
         if len(args) == 0:
@@ -19,6 +21,22 @@ class Field:
             self.domain = []
 
     # endregion
+
+    # region overloaded comparison operators, used in case of heuristics during AC-3
+
+    # explanation on why this is needed:
+    # during heuristic comparison, heapq has a tuple of priority and arc (prio, arc)
+    # if priority values are the same, python will try to compare arcs, which is a tuple of fields (field, field)
+    # in the same fashion, this will lead to python comparing two fields, which does not make sense in the context of sudoku, and these particular heuristics
+    # therefore I introduced a dummy field priority and overloaded the equals operator, now all fields are "equal"
+    # This means that the two tuples of (priority, arc) are always equal if priority is equal, because arcs are always "equal"
+    # This is the exact behaviour we want, and it is always deterministic.
+
+
+    def __eq__(self, other):
+        return self.priority == other.priority
+    
+    #endregion
 
     # region value functions
 

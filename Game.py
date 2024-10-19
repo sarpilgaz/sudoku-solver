@@ -1,14 +1,44 @@
 from queue import Queue
+import heapq
 from Sudoku import Sudoku
 
 class Game:
 
     def __init__(self, sudoku):
         self.arc_queue = Queue()
+        self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
+        self.h_type = 0 # use -1 if you want no heuristic
         self.sudoku = sudoku
+
+    def set_heuristic_type(self, h):
+        self.h_type = h
+
+    def get_heuristic_type(self):
+        return self.h_type
 
     def show_sudoku(self):
         print(self.sudoku)
+
+    def heuristic_picker(self, arc):
+        heuristic_id = self.h_type
+        field1, field2 = arc
+        domain1_size = field1.get_domain_size()
+        domain2_size = field2.get_domain_size()
+
+        if heuristic_id == 0: #MRV only
+            return min(domain1_size, domain2_size)
+        
+        elif heuristic_id == 1: #finalized fields first only
+            if domain1_size == 1 or domain2_size == 1:
+                return 1 #top prio
+
+        elif heuristic_id == 2: #both
+            if domain1_size == 1 or domain2_size == 1:
+                return 1 #top prio
+            else: return min(domain1_size, domain2_size)
+        
+        return 0 #default to 0
+
 
     def init_queue(self):
         """
@@ -19,7 +49,12 @@ class Game:
                 field = self.sudoku.board[row][col]
                 neighbours = field.get_neighbours()
                 for n in neighbours:
-                    self.arc_queue.put((field, n))
+                    arc = (field, n)
+                    if self.h_type == -1: # ne heuristic requested
+                        self.arc_queue.put(arc)
+                    else:
+                        prio = self.heuristic_picker(arc)
+                        heapq.heappush(self.arc_pqueue, (prio, arc))
 
     def revise(self, arc):
         """
@@ -65,7 +100,12 @@ class Game:
         """
         neighbours = field.get_neighbours()
         for n in neighbours:
-            self.arc_queue.put((n, field))
+            arc = (n, field)
+            if self.h_type == -1: # no heuristic requested
+                self.arc_queue.put(arc)
+            else:
+                priority = self.heuristic_picker(arc)
+                heapq.heappush(self.arc_pqueue, (priority, arc))
 
     def solve(self) -> bool:
         """
@@ -74,8 +114,16 @@ class Game:
         """
         self.init_queue()
 
-        while not self.arc_queue.empty():
-            current_arc = self.arc_queue.get()
+        while True:
+            current_arc = ()
+            if self.h_type == -1: #no heuristic requested
+                if self.arc_queue.empty():
+                    break
+                current_arc = self.arc_queue.get()
+            else:
+                if not self.arc_pqueue:
+                    break
+                priority, current_arc = heapq.heappop(self.arc_pqueue)
 
             if self.revise(current_arc):
                 if current_arc[0].get_domain_size() == 0:
