@@ -32,9 +32,8 @@ class Field:
     # This means that the two tuples of (priority, arc) are always equal if priority is equal, because arcs are always "equal"
     # This is the exact behaviour we want, and it is always deterministic.
 
-
-    #def __eq__(self, other):
-        #return self.priority == other.priority
+    def __lt__(self, other):
+        return self.priority == other.priority
     
     #endregion
 
