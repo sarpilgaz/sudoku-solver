@@ -97,7 +97,7 @@ class Game:
     def put_neighbours_in_queue(self, arc):
         """
         Function puts all neighbours of a field into the arc_queue as the tuple (neighbour, field)
-        currently puts duplicate arcs in queue
+        currently, doesn't put the arc considered back, but does put a arc in the queue even if it may be in the queue already
         """
         neighbours = arc[0].get_other_neighbours(arc[1])
         for n in neighbours:
