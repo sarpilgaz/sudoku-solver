@@ -7,7 +7,7 @@ class Game:
     def __init__(self, sudoku):
         self.arc_queue = Queue()
         self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
-        self.h_type = -1 # use -1 if you want no heuristic
+        self.h_type = 2-1 # use -1 if you want no heuristic
         self.sudoku = sudoku
 
     def set_heuristic_type(self, h):
@@ -94,19 +94,19 @@ class Game:
 
         return revised
 
-    def put_neighbours_in_queue(self, field):
+    def put_neighbours_in_queue(self, arc):
         """
         Function puts all neighbours of a field into the arc_queue as the tuple (neighbour, field)
         currently puts duplicate arcs in queue
         """
-        neighbours = field.get_neighbours()
+        neighbours = arc[0].get_other_neighbours(arc[1])
         for n in neighbours:
-            arc = (n, field)
+            n_arc = (n, arc[0])
             if self.h_type == -1: # no heuristic requested
-                self.arc_queue.put(arc)
+                self.arc_queue.put(n_arc)
             else:
-                priority = self.heuristic_picker(arc)
-                heapq.heappush(self.arc_pqueue, (priority, arc))
+                priority = self.heuristic_picker(n_arc)
+                heapq.heappush(self.arc_pqueue, (priority, n_arc))
 
     def solve(self) -> bool:
         """
@@ -131,7 +131,7 @@ class Game:
                     print("unsolveable sudoku detected, last state is as follows:")
                     self.show_sudoku()
                     return False #no solution is possible
-                self.put_neighbours_in_queue(current_arc[0])
+                self.put_neighbours_in_queue(current_arc)
 
         return True #freedom!
 
