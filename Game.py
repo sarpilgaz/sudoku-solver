@@ -126,7 +126,7 @@ class Game:
                 domain_size = field.get_domain_size()
 
                 # Find the most constrained field (with domain size > 1)
-                if 1 < domain_size < len_of_most_constrained:
+                if 1 < domain_size < len_of_most_constrained and field.get_value() == 0:
                     len_of_most_constrained = domain_size
                     most_constrained_field = field
 
