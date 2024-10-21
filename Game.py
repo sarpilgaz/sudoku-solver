@@ -19,6 +19,8 @@ class Game:
     def show_sudoku(self):
         print(self.sudoku)
 
+    #functions for AC-3:
+
     def heuristic_picker(self, arc):
         heuristic_id = self.h_type
         field1, field2 = arc
@@ -112,13 +114,42 @@ class Game:
                 priority = self.heuristic_picker(n_arc)
                 heapq.heappush(self.arc_pqueue, (priority, n_arc))
 
+    def AC_3(self) -> bool:
+        """
+        Implementation of the AC-3 algorithm
+        @return: true if the constraints can be satisfied, false otherwise
+        """
+        self.init_queue()
+
+        while True:
+            current_arc = ()
+            if self.h_type == -1: #no heuristic requested
+                if self.arc_queue.empty():
+                    break
+                current_arc = self.arc_queue.get()
+            else:
+                if not self.arc_pqueue:
+                    break
+                priority, current_arc = heapq.heappop(self.arc_pqueue)
+
+            if self.revise(current_arc):
+                if current_arc[0].get_domain_size() == 0:
+                    print("unsolveable sudoku detected, last state is as follows:")
+                    self.show_sudoku()
+                    return False #no solution is possible
+                self.put_neighbours_in_queue(current_arc)
+
+        return True #freedom!
+
     #functions for backtracking search:
+
     def pick_unset_field(self):
-        """Function to pick an unset field (i.e., a field with domain size > 1).
+        """Function to pick an unset field (i.e. a field with domain size > 1) for the next field to assign a value to.
         Uses MRV to select the most constrained field.
+        Degree heuristic was tried, but proved to slow down the overall solving, and thus MRV is the only heuristic used.
         """
         len_of_most_constrained = float('inf')  # Initialize to a high value
-        most_constrained_field = None  # Start with no field selected
+        most_restricted_field = None  # Start with no field selected
 
         for i in range(9):
             for j in range(9):
@@ -159,8 +190,7 @@ class Game:
             curr_field.remove_value()
 
         return False
-
-
+    
     def is_filled(self):
         """
         function to check if the current setup of the sudoku is filled or not
@@ -172,43 +202,14 @@ class Game:
                     return False
         return True
     
-    def solve(self) -> bool:
-        """
-        Implementation of the AC-3 algorithm
-        @return: true if the constraints can be satisfied, false otherwise
-        """
-        self.init_queue()
-
-        while True:
-            current_arc = ()
-            if self.h_type == -1: #no heuristic requested
-                if self.arc_queue.empty():
-                    break
-                current_arc = self.arc_queue.get()
-            else:
-                if not self.arc_pqueue:
-                    break
-                priority, current_arc = heapq.heappop(self.arc_pqueue)
-
-            if self.revise(current_arc):
-                if current_arc[0].get_domain_size() == 0:
-                    print("unsolveable sudoku detected, last state is as follows:")
-                    self.show_sudoku()
-                    return False #no solution is possible
-                self.put_neighbours_in_queue(current_arc)
-
-        return True #freedom!
+    #solver and verifier:
     
     def full_solver(self):
-        if self.solve():
-            if self.backtracker():
-                print("ÖDEV DOMALTILDI")
-                return True
-            else:
-                print("ÖDEV DOMALTILMADI")
-        else: 
-            print("ÖDEV DOMALTILMADI")
-            return False
+        """A full solver function that does backtracking after AC-3, if necessary.
+        Even though the backtracker is called everytime regardless of the success of AC-3, the function immediately terminates if the
+        state of the sudoku is filled.
+        """
+        return self.AC_3() and self.backtracker()
     
 
     def valid_solution(self) -> bool:
@@ -268,4 +269,3 @@ class Game:
         #no counter example found, sudoku is solved correctly
         self.show_sudoku()
         return True
-
