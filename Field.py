@@ -53,6 +53,10 @@ class Field:
     def set_value(self, value):
         self.value = value
 
+    def remove_value(self):
+        """synonym to set_value(0), but this is more readable :-)"""
+        self.value = 0
+
     # endregion
 
     # region neighbor functions

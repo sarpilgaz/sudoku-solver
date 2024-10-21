@@ -1,4 +1,5 @@
 import os
+import sys
 from Game import Game
 from Sudoku import Sudoku
 
@@ -11,7 +12,7 @@ class App:
     def solve_sudoku(sudoku_file, h_type):
         game = Game(Sudoku(sudoku_file), h_type)
         game.show_sudoku()
-        if (game.solve() and game.valid_solution()):
+        if (game.full_solver() and game.valid_solution()):
             print("Solved!")
         else:
             print("Could not solve this sudoku :(")

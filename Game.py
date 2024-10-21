@@ -112,6 +112,66 @@ class Game:
                 priority = self.heuristic_picker(n_arc)
                 heapq.heappush(self.arc_pqueue, (priority, n_arc))
 
+    #functions for backtracking search:
+    def pick_unset_field(self):
+        """Function to pick an unset field (i.e., a field with domain size > 1).
+        Uses MRV to select the most constrained field.
+        """
+        len_of_most_constrained = float('inf')  # Initialize to a high value
+        most_constrained_field = None  # Start with no field selected
+
+        for i in range(9):
+            for j in range(9):
+                field = self.sudoku.board[i][j]
+                domain_size = field.get_domain_size()
+
+                # Find the most constrained field (with domain size > 1)
+                if 1 < domain_size < len_of_most_constrained:
+                    len_of_most_constrained = domain_size
+                    most_constrained_field = field
+
+        return most_constrained_field
+
+    def check_neighbours(self, field):
+        """function to check the neighbours of a given field to see if it doesn't violate constraints
+        returns true is no constraint is violated, false otherwise
+        """
+        neighbours = field.get_neighbours()
+        for n in neighbours:
+            if field.get_value() == n.get_value():
+                return False #big no no !
+        return True
+    
+    def backtracker(self):
+        """backtracking search"""
+        if self.is_filled():
+            return True
+        
+        curr_field = self.pick_unset_field()
+
+        for v in curr_field.get_domain():
+            curr_field.set_value(v)
+
+            if self.check_neighbours(curr_field):
+                if self.backtracker():
+                    return True
+                
+            curr_field.remove_value()
+
+        return False
+
+
+    def is_filled(self):
+        """
+        function to check if the current setup of the sudoku is filled or not
+        DOES NOT validate a board, just checks if all fields are set or not
+        """
+        for i in range(0, 9):
+            for j in range(0,9):
+                if self.sudoku.board[i][j].get_value() == 0:
+                    return False
+        return True
+    
     def solve(self) -> bool:
         """
         Implementation of the AC-3 algorithm
@@ -138,17 +198,18 @@ class Game:
                 self.put_neighbours_in_queue(current_arc)
 
         return True #freedom!
-
-    #functions for backtracking search:
-    def pick_unset_field(self):
-        """function to pick a field that is unset, so fields with domain larger than 1.
-        Uses both MRV to select a field that is the most constrainted
-        """
-
-
-
     
-
+    def full_solver(self):
+        if self.solve():
+            if self.backtracker():
+                print("ÖDEV DOMALTILDI")
+                return True
+            else:
+                print("ÖDEV DOMALTILMADI")
+        else: 
+            print("ÖDEV DOMALTILMADI")
+            return False
+    
 
     def valid_solution(self) -> bool:
         """
