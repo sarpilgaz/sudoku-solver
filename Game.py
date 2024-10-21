@@ -4,10 +4,10 @@ from Sudoku import Sudoku
 
 class Game:
 
-    def __init__(self, sudoku):
+    def __init__(self, sudoku, h_type):
         self.arc_queue = Queue()
         self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
-        self.h_type = 2-1 # use -1 if you want no heuristic
+        self.h_type = h_type
         self.sudoku = sudoku
 
     def set_heuristic_type(self, h):
@@ -37,7 +37,7 @@ class Game:
                 return 1 #top prio
             else: return min(domain1_size, domain2_size)
         
-        return 0 #default to 0
+        return 1 #default to 1
 
 
     def init_queue(self):
@@ -97,7 +97,11 @@ class Game:
     def put_neighbours_in_queue(self, arc):
         """
         Function puts all neighbours of a field into the arc_queue as the tuple (neighbour, field)
-        currently, doesn't put the arc considered back, but does put a arc in the queue even if it may be in the queue already
+        We need to put back a arc back in the queue even if it may already be present, because after a revision, because:
+
+        The reason is that even if an arc is already in the queue, a revision of the domain can potentially make it necessary to revise the same arc again. 
+        For example, reducing the domain of a neighboring variable might require rechecking all arcs involving that variable, even if those arcs are already in the queue.
+        If you skip adding an arc back, you risk missing necessary domain reductions, leading to an incomplete or incorrect arc consistency check.
         """
         neighbours = arc[0].get_other_neighbours(arc[1])
         for n in neighbours:

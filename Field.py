@@ -28,9 +28,10 @@ class Field:
     # during heuristic comparison, heapq has a tuple of priority and arc (prio, arc)
     # if priority values are the same, python will try to compare arcs, which is a tuple of fields (field, field)
     # in the same fashion, this will lead to python comparing two fields, which does not make sense in the context of sudoku, and these particular heuristics
-    # therefore I introduced a dummy field priority and overloaded the equals operator, now all fields are "equal"
+    # therefore I introduced a dummy field priority and overloaded the lt operator, now all fields are "equal"
     # This means that the two tuples of (priority, arc) are always equal if priority is equal, because arcs are always "equal"
     # This is the exact behaviour we want, and it is always deterministic.
+    # is this a dirty cheat? or is it ingenious? idk, you tell me. 
 
     def __lt__(self, other):
         return self.priority == other.priority
