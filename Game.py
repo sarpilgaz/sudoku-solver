@@ -139,6 +139,16 @@ class Game:
 
         return True #freedom!
 
+    #functions for backtracking search:
+    def pick_unset_field(self):
+        """function to pick a field that is unset, so fields with domain larger than 1.
+        Uses both MRV to select a field that is the most constrainted
+        """
+
+
+
+    
+
 
     def valid_solution(self) -> bool:
         """
