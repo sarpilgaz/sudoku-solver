@@ -97,6 +97,13 @@ class Field:
         if len(self.domain) == 1:
             self.set_value(self.domain[0])
         return value_removed
+    
+    def add_to_domain(self, value):
+        """add the given value to the domain of the field, if not already present"""
+        if value in self.domain:
+            return
+        else:
+            self.domain.append(value)
 
     # endregion
 

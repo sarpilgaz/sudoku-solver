@@ -9,6 +9,7 @@ class Game:
         self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
         self.h_type = h_type
         self.sudoku = sudoku
+        self.changes = [] #track changes to properly backtrack later
 
     def set_heuristic_type(self, h):
         self.h_type = h
@@ -149,7 +150,6 @@ class Game:
         Degree heuristic was tried, but proved to slow down the overall solving, and thus MRV is the only heuristic used.
         """
         len_of_most_constrained = float('inf')  # Initialize to a high value
-        most_restricted_field = None  # Start with no field selected
 
         for i in range(9):
             for j in range(9):
@@ -173,6 +173,28 @@ class Game:
                 return False #big no no !
         return True
     
+    def forward_check(self, field, value):
+
+        neighbours = field.get_neighbours()
+        for n in neighbours:
+            domain_of_n = n.get_domain()
+            len_of_n_domain_before = n.get_domain_size()
+            if value in domain_of_n:
+                n.remove_from_domain(value)
+                self.changes.append((n, value))
+            
+            if len(domain_of_n) == 0 and len_of_n_domain_before != 0: #It is only a const. violation if the result of the reduction reduces the domain to 0. 
+                self.undo_changes(n, self.changes)
+                field.remove_value()
+                return False
+            
+        return True
+
+    def undo_changes(self, field_to_restore_domain, changes):
+        for (curr_field, value) in changes:
+            if curr_field == field_to_restore_domain:
+                field_to_restore_domain.add_to_domain(value)
+    
     def backtracker(self):
         """backtracking search"""
         if self.is_filled():
@@ -182,12 +204,13 @@ class Game:
 
         for v in curr_field.get_domain():
             curr_field.set_value(v)
-
             if self.check_neighbours(curr_field):
-                if self.backtracker():
-                    return True
+                if self.forward_check(curr_field, v):
+                    if self.backtracker():
+                        return True
                 
-            curr_field.remove_value()
+                self.undo_changes(curr_field, self.changes)
+                curr_field.remove_value()
 
         return False
     
