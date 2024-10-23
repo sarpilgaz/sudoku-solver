@@ -1,36 +1,31 @@
-A simple sudoku solver, created from the framework my university provided.
+# Sudoku Solver
 
-Sudokus are stored & read from a directory in the root, called sudokus, which follow this format:
+A simple Sudoku solver, created from the framework provided by my university.
 
-9x9 board, unset fields are 0, and one newline character at the end of each row, excluding the last, for example:
+## Sudoku Format
 
-000006080
+Sudokus are stored and read from a directory in the root called `Sudokus`. The format is as follows:
 
-009105372
+- 9x9 board
+- Unset fields are represented by `0`
+- Each row ends with a newline character, except the last row
 
-080700016
+Refer to the `sudokus` folder for examples.
 
-000000034
+## Algorithm
 
-000351000
+The solver uses the AC-3 constraint satisfaction algorithm initially. If AC-3 alone doesn't solve the puzzle, it continues with backtracking DFS. 
 
-730000000
+Optional heuristics for AC-3 are available to order the arcs. These heuristics include:
+- **MRV (Minimum Remaining Values)**: Prioritizes variables with the fewest legal values left.
+- **Set Fields First**: Prefers working with already set fields.
 
-610008020
+## Possible Further Improvements & To-Do
 
-823904600
+1. **Optimize the Backtracker with Forward Planning**  
+   Forward planning can reduce the domains of neighboring variables when a field is set. This approach offers the following benefits:
+   - **Early Pruning**: If a domain becomes empty, we can immediately prune, avoiding a dead-end track.
+   - **Fewer Backtracking Steps**: Reducing domain sizes decreases the number of steps and recursions required to reach a solution.
 
-070600000
-
-The algorithm uses AC-3 constraint satisfaction first, and continues with backtracking DFS if AC-3 didn't manage to solve it.
-Optional heuristics for the AC-3 algorithm are present, which are used to order the arcs. These are MRV and set fields first.
-
-
-Possible Further improvements, and todo:
-
-    1) optimize the backtracker with forward planning, which aims to reduce the domains of neighbours when a field is set. This can have the following benefits:
-
-        -> Early pruning. If a domain is emptied, we can be sure we are on a dead end track, and prune.
-        -> Reduction in backtrack steps. The algorithm considers all values present in a variables domain. Reduction in said domains can result in less steps and less recursion required to reach a solution.
-
-    2)extend the functionality to allow for more than 5 different sudoku options
+2. **Extend Functionality**  
+   Allow the solver to handle more than 5 different Sudoku options.
