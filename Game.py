@@ -9,7 +9,6 @@ class Game:
         self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
         self.h_type = h_type
         self.sudoku = sudoku
-        self.changes = [] #track changes to properly backtrack later
 
     def set_heuristic_type(self, h):
         self.h_type = h
@@ -140,12 +139,13 @@ class Game:
                     return False #no solution is possible
                 self.put_neighbours_in_queue(current_arc)
 
+        self.show_sudoku()
         return True #freedom!
 
     #functions for backtracking search:
 
     def pick_unset_field(self):
-        """Function to pick an unset field (i.e. a field with domain size > 1) for the next field to assign a value to.
+        """Function to pick an unset field for the next field to assign a value to.
         Uses MRV to select the most constrained field.
         Degree heuristic was tried, but proved to slow down the overall solving, and thus MRV is the only heuristic used.
         """
@@ -156,8 +156,8 @@ class Game:
                 field = self.sudoku.board[i][j]
                 domain_size = field.get_domain_size()
 
-                # Find the most constrained field (with domain size > 1)
-                if 1 < domain_size < len_of_most_constrained and field.get_value() == 0:
+                # Find the most constrained field
+                if domain_size < len_of_most_constrained and field.get_value() == 0:
                     len_of_most_constrained = domain_size
                     most_constrained_field = field
 
@@ -167,37 +167,60 @@ class Game:
         """function to check the neighbours of a given field to see if it doesn't violate constraints
         returns true is no constraint is violated, false otherwise
         """
-        neighbours = field.get_neighbours()
-        for n in neighbours:
+        for n in field.get_neighbours():
             if field.get_value() == n.get_value():
                 return False #big no no !
         return True
     
-    def forward_check(self, field, value):
-
-        neighbours = field.get_neighbours()
-        for n in neighbours:
-            domain_of_n = n.get_domain()
+    def forward_check(self, field, value, changes):
+        """function applies a forward checking heuristic to the backtracker.
+        for all the neighbours of the given "field", we remove the value that was assigned to it from their domains. The value is in parameter "value".
+        all the changes to domains are remembered in list "changes" which is a tuple (field, <value removed from domain>)
+        if, as the result of the domain reduction, a domain is size 0, then this assignment "value" to "field" must be incoorect, therefore a dead end.
+            in this case, the "value" is removed from "field" and a function to restore domains using list "changes" is called.
+            finally, we return False in this case.
+        if not, we return true.
+        """
+        for n in field.get_neighbours():
             len_of_n_domain_before = n.get_domain_size()
-            if value in domain_of_n:
-                n.remove_from_domain(value)
-                self.changes.append((n, value))
+            if value in n.get_domain():
+                n.remove_from_domain_no_assign(value)
+                changes.append((n, value))
             
-            if len(domain_of_n) == 0 and len_of_n_domain_before != 0: #It is only a const. violation if the result of the reduction reduces the domain to 0. 
-                self.undo_changes(n, self.changes)
+            if n.get_domain_size() == 0 and len_of_n_domain_before != 0: #It is only a const. violation if the RESULT of the reduction reduces the domain to 0. 
+                self.undo_changes(changes)
                 field.remove_value()
                 return False
-            
         return True
 
-    def undo_changes(self, field_to_restore_domain, changes):
-        for (curr_field, value) in changes:
-            if curr_field == field_to_restore_domain:
-                field_to_restore_domain.add_to_domain(value)
+    def undo_changes(self, changes):
+        """simply loops over the list and restores "value" to the domain of "curr_field" """
+        for curr_field, value in changes:
+            curr_field.add_to_domain(value) 
     
     def backtracker(self):
-        """backtracking search"""
-        if self.is_filled():
+        """
+        Solves the Sudoku board using backtracking search with forward checking 
+        to reduce domains and enforce constraints.
+
+        Steps:
+        1. If the board is fully solved, fills in the
+        board values with `fill_board()` and terminates successfully.
+        2. else, Selects the next unset field using `pick_unset_field()`.
+        3. Iterates over possible values in the field's domain:
+        - Tentatively assigns a value to the field.
+        - Validates the assignment against neighboring fields with `check_neighbours()`.
+        - Applies `forward_check()` to reduce domains of neighboring fields,
+            recording any changes in list `changes` for rollback.
+        - Recursively continues the search if forward checking succeeds.
+        4. If the assignment leads to a dead end, calls `undo_changes()` to rollback
+        domain reductions and proceeds with the next value.
+
+        Returns:
+            True if the board is successfully solved, False otherwise.
+        """
+        if self.is_solved():
+            self.fill_board()
             return True
         
         curr_field = self.pick_unset_field()
@@ -205,25 +228,33 @@ class Game:
         for v in curr_field.get_domain():
             curr_field.set_value(v)
             if self.check_neighbours(curr_field):
-                if self.forward_check(curr_field, v):
+                changes = []
+                if self.forward_check(curr_field, v, changes):
                     if self.backtracker():
                         return True
                 
-                self.undo_changes(curr_field, self.changes)
-                curr_field.remove_value()
+                self.undo_changes(changes)
 
         return False
     
-    def is_filled(self):
-        """
-        function to check if the current setup of the sudoku is filled or not
-        DOES NOT validate a board, just checks if all fields are set or not
+    def is_solved(self):
+        """function checks if the sudoku board is "filled" or not.
+        a board is "filled" iff all fields have a domain smaller than 1, including.
+        this is because the backtracker doesn't assign values to fields as soon as their domain reaches zero. 
         """
         for i in range(0, 9):
             for j in range(0,9):
-                if self.sudoku.board[i][j].get_value() == 0:
+                if self.sudoku.board[i][j].get_domain_size() > 1:
                     return False
         return True
+    
+    def fill_board(self):
+        """function simply loops over the board and assigns for fields which have a domain of 1 the value in their domain"""
+        for i in range(0, 9):
+            for j in range(0,9):
+                if self.sudoku.board[i][j].get_domain_size() == 1:
+                    self.sudoku.board[i][j].set_value(self.sudoku.board[i][j].get_domain()[0])
+
     
     #solver and verifier:
     

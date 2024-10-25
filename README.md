@@ -22,10 +22,9 @@ Optional heuristics for AC-3 are available to order the arcs. These heuristics i
 
 ## Possible Further Improvements & To-Do
 
-1. **Optimize the Backtracker with Forward Planning**  
-   Forward planning can reduce the domains of neighboring variables when a field is set. This approach offers the following benefits:
-   - **Early Pruning**: If a domain becomes empty, we can immediately prune, avoiding a dead-end track.
-   - **Fewer Backtracking Steps**: Reducing domain sizes decreases the number of steps and recursions required to reach a solution.
+1. **Extend user interface**
+   Extend the user interface and functionality of selecting a sudoku so that more than the 5 available sudokus are available to be solved.
 
-2. **Extend Functionality**  
-   Allow the solver to handle more than 5 different Sudoku options.
+2. **Create GUI**
+   Probably never, but might as well write it here. 
+   

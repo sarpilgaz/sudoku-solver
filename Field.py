@@ -73,7 +73,7 @@ class Field:
         @param b:
         @return: All neighbors of this Field except b
         """
-        new_neighbours = self.neighbours
+        new_neighbours = self.neighbours.copy()
         new_neighbours.remove(b)
         return new_neighbours
 
@@ -98,6 +98,10 @@ class Field:
             self.set_value(self.domain[0])
         return value_removed
     
+    def remove_from_domain_no_assign(self, value):
+        """also removes given value from domain, but doesn't assign pre-emptively."""
+        self.domain.remove(value)
+
     def add_to_domain(self, value):
         """add the given value to the domain of the field, if not already present"""
         if value in self.domain:
