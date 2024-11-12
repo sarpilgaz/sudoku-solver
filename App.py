@@ -10,7 +10,7 @@ class App:
 
     @staticmethod
     def solve_sudoku(sudoku_file, h_type, solver_type):
-        game = Game(Sudoku(sudoku_file), h_type)
+        game = Game(Sudoku(sudoku_file), h_type, False)
         game.show_sudoku()
         if solver_type == 1:
             if (game.full_solver() and game.valid_solution()):
@@ -19,8 +19,7 @@ class App:
                 print("Could not solve this sudoku :(")
         else:
             if (game.AC_3() and game.valid_solution()):
-                if (game.full_solver() and game.valid_solution()):
-                    print("Solved!")
+                print("Solved!")
             else:
                 print("Could not solve this sudoku :(")
 

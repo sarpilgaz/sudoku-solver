@@ -31,7 +31,8 @@ class Field:
     # therefore I introduced a dummy field priority and overloaded the lt operator, now all fields are "equal"
     # This means that the two tuples of (priority, arc) are always equal if priority is equal, because arcs are always "equal"
     # This is the exact behaviour we want, and it is always deterministic.
-    # is this a dirty cheat? or is it ingenious? idk, you tell me. 
+
+    # This is a dirty cheat, and should be killed with fire in the future, but idk I'm too lazy.
 
     def __lt__(self, other):
         return self.priority == other.priority

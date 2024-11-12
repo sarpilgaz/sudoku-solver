@@ -4,11 +4,13 @@ from Sudoku import Sudoku
 
 class Game:
 
-    def __init__(self, sudoku, h_type):
+    def __init__(self, sudoku, h_type, benchmarking_mode):
         self.arc_queue = Queue()
         self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
         self.h_type = h_type
         self.sudoku = sudoku
+        self.arc_revisions = 0
+        self.benchmark_mode = benchmarking_mode
 
     def set_heuristic_type(self, h):
         self.h_type = h
@@ -80,6 +82,7 @@ class Game:
                 if value == second_value:
                     arc[0].remove_from_domain(value)
                     revised = True
+                    self.arc_revisions += 1
             return revised
         
         for value_1 in domain_of_first:
@@ -93,6 +96,7 @@ class Game:
             if not diff_value:
                 arc[0].remove_from_domain(value_1)
                 revised = True
+                self.arc_revisions += 1 
 
         return revised
 
@@ -127,19 +131,21 @@ class Game:
                 if self.arc_queue.empty():
                     break
                 current_arc = self.arc_queue.get()
-            else:
+            else: #some heuristic requested
                 if not self.arc_pqueue:
                     break
+                #we dont need priority anymore
                 priority, current_arc = heapq.heappop(self.arc_pqueue)
 
             if self.revise(current_arc):
                 if current_arc[0].get_domain_size() == 0:
-                    print("unsolveable sudoku detected, last state is as follows:")
-                    self.show_sudoku()
+                    if not self.benchmark_mode:
+                        print("unsolveable sudoku detected, last state is as follows:")
+                        self.show_sudoku()
                     return False #no solution is possible
                 self.put_neighbours_in_queue(current_arc)
-
-        self.show_sudoku()
+        if self.benchmark_mode:
+            print(self.arc_revisions)
         return True #freedom!
 
     #functions for backtracking search:
@@ -176,7 +182,7 @@ class Game:
         """function applies a forward checking heuristic to the backtracker.
         for all the neighbours of the given "field", we remove the value that was assigned to it from their domains. The value is in parameter "value".
         all the changes to domains are remembered in list "changes" which is a tuple (field, <value removed from domain>)
-        if, as the result of the domain reduction, a domain is size 0, then this assignment "value" to "field" must be incoorect, therefore a dead end.
+        if, as the result of the domain reduction, a domain is size 0, then this assignment "value" to "field" must be incorrect, therefore a dead end.
             in this case, the "value" is removed from "field" and a function to restore domains using list "changes" is called.
             finally, we return False in this case.
         if not, we return true.
@@ -275,51 +281,66 @@ class Game:
         - Each 3x3 block contains unique numbers from 1 to 9.
         @return: True if the sudoku solution is correct, False otherwise
         """
-        
-        # Check every row:
+        # Check rows
         for i in range(9):
-            s = set()
-            for j in range(9):
-                value = self.sudoku.board[i][j].get_value()
-                if value in s or value == 0:
-                    if value == 0:
-                        print(f"Unset field found on row {i+1}, AC-3 algorithm must have failed. Displaying the last state:")
-                    else:
-                        print(f"The value {value} was detected twice in row {i+1}. Displaying the state:")
-                    self.show_sudoku() 
-                    return False  # Counterexample found
-                s.add(value)
+            if not self.check_and_report(
+                (self.sudoku.board[i][j].get_value() for j in range(9)),
+                f"row {i+1}"
+            ):
+                return False
 
-        # Check every column:
+        # Check columns
         for i in range(9):
-            s = set()
-            for j in range(9):
-                value = self.sudoku.board[j][i].get_value()
-                if value in s or value == 0:
-                    if value == 0:
-                        print(f"Unset field found on row {i+1}, AC-3 algorithm must have failed. Displaying the last state:")
-                    else:
-                        print(f"The value {value} was detected twice in column {i+1}. Displaying the state:")
-                    self.show_sudoku() 
-                    return False  # Counterexample found
-                s.add(value)
+            if not self.check_and_report(
+                (self.sudoku.board[j][i].get_value() for j in range(9)),
+                f"column {i+1}"
+            ):
+                return False
 
-        # Check every 3x3 subgrid:
-        for row_block in range(0, 9, 3): 
+        # Check 3x3 subgrids
+        for row_block in range(0, 9, 3):
             for col_block in range(0, 9, 3):
-                s = set()
-                for i in range(3):
-                    for j in range(3):
-                        value = self.sudoku.board[row_block + i][col_block + j].get_value()
-                        if value in s or value == 0:
-                            if value == 0:
-                                print(f"Unset field found on row {i+1}, AC-3 algorithm must have failed. Displaying the last state:")
-                            else:
-                                print(f"The value {value} was detected twice in 3x3 grid {i+1}, {j+1}. Displaying the state:")
-                            self.show_sudoku() 
-                            return False  # Counterexample found
-                        s.add(value)
+                if not self.check_and_report(
+                    (self.sudoku.board[row_block + i][col_block + j].get_value()
+                    for i in range(3) for j in range(3)),
+                    f"3x3 block starting at ({row_block+1},{col_block+1})"
+                ):
+                    return False
 
-        #no counter example found, sudoku is solved correctly
-        self.show_sudoku()
+        # If no counterexample was found, the sudoku is solved correctly
+        if not self.benchmark_mode:
+            self.show_sudoku()
         return True
+
+    def check_and_report(self, values, context) -> bool:
+        """
+        Checks a sequence of values for duplicates or unset fields.
+        Reports any issues found if not in benchmark mode.
+        
+        :param values: An iterable of values to check.
+        :param context: A string indicating the context (e.g., "row 1", "column 3").
+        :return: False if an error is found, True otherwise.
+        """
+        seen = set()
+        for value in values:
+            if value in seen or value == 0:
+                self.report_error(value, context)
+                return False
+            seen.add(value)
+        return True
+
+    def report_error(self, value, context):
+        """
+        Reports an error based on the value and context, unless in benchmark mode.
+        
+        :param value: The problematic value.
+        :param context: A string indicating where the error was found.
+        """
+        if self.benchmark_mode:
+            return
+
+        if value == 0:
+            print(f"Unset field found in {context}, AC-3 algorithm must have failed. Displaying the last state:")
+        else:
+            print(f"The value {value} was detected twice in {context}. Displaying the state:")
+        self.show_sudoku()
