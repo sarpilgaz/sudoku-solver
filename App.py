@@ -1,26 +1,27 @@
 import os
-import sys
 from Game import Game
 from Sudoku import Sudoku
 
 sudoku_folder = os.path.join(os.path.dirname(__file__), "Sudokus")
 
 class App:
-
-
     @staticmethod
     def solve_sudoku(sudoku_file, h_type, solver_type):
         game = Game(Sudoku(sudoku_file), h_type, False)
         game.show_sudoku()
         if solver_type == 1:
             if (game.full_solver() and game.valid_solution()):
+                print(game.arc_revisions)
                 print("Solved!")
             else:
+                print(game.arc_revisions)
                 print("Could not solve this sudoku :(")
         else:
             if (game.AC_3() and game.valid_solution()):
+                print(game.arc_revisions)
                 print("Solved!")
             else:
+                print(game.arc_revisions)
                 print("Could not solve this sudoku :(")
 
     @staticmethod

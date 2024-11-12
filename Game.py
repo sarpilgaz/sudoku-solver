@@ -28,20 +28,42 @@ class Game:
         field1, field2 = arc
         domain1_size = field1.get_domain_size()
         domain2_size = field2.get_domain_size()
-
-        if heuristic_id == 0: #MRV only
+        
+        # MRV Heuristic only
+        if heuristic_id == 0: 
+            # Prioritize fields with the smallest non-zero domain sizes
+            if domain1_size == 0 and domain2_size == 0:
+                return float('inf')  # Arc involving two pre-assigned fields has the lowest priority
+            if domain1_size == 0:
+                return domain2_size
+            if domain2_size == 0:
+                return domain1_size
             return min(domain1_size, domain2_size)
         
-        elif heuristic_id == 1: #finalized fields first only
-            if domain1_size == 1 or domain2_size == 1:
-                return 1 #top prio
+        # Finalized fields first
+        elif heuristic_id == 1: 
+            # Prioritize arcs where at least one field is finalized (domain size <= 1)
+            if domain1_size <= 1 or domain2_size <= 1:
+                return 1  # Top priority for finalized fields
+            else:
+                return domain1_size + domain2_size  # Otherwise, prioritize by combined domain size
 
-        elif heuristic_id == 2: #both
-            if domain1_size == 1 or domain2_size == 1:
-                return 1 #top prio
-            else: return min(domain1_size, domain2_size)
-        
-        return 1 #default to 1
+        # Combined Heuristic (Finalized fields + MRV)
+        elif heuristic_id == 2: 
+            # If either field is finalized, prioritize it first
+            if domain1_size <= 1 or domain2_size <= 1:
+                return 1
+            else:
+                # Otherwise, prioritize by MRV
+                if domain1_size == 0:
+                    return domain2_size
+                if domain2_size == 0:
+                    return domain1_size
+                return min(domain1_size, domain2_size)
+
+        # Default case (no heuristic)
+        return 1
+
 
 
     def init_queue(self):
@@ -144,8 +166,7 @@ class Game:
                         self.show_sudoku()
                     return False #no solution is possible
                 self.put_neighbours_in_queue(current_arc)
-        if self.benchmark_mode:
-            print(self.arc_revisions)
+
         return True #freedom!
 
     #functions for backtracking search:
