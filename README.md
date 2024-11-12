@@ -23,7 +23,7 @@ The solver uses the AC-3 constraint satisfaction algorithm initially. If AC-3 al
 Optional heuristics for AC-3 are available to order the arcs. These heuristics include:
 - **MRV (Minimum Remaining Values)**: Prioritizes variables with the fewest legal values left.
 - **Set Fields First**: Prefers working with already set fields.
-As It stands, these heuristics make 0 FUCKING difference, I have no clue why. I suspect it is related to how I handle AC-3 and thhe eventual need to visit all arcs anyway, but idk.
+- As It stands, these heuristics make 0 FUCKING difference, I have no clue why. I suspect it is related to how I handle AC-3 and thhe eventual need to visit all arcs anyway, but idk.
 
 ## Benchmarking
 
