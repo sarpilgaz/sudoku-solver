@@ -1,6 +1,10 @@
 # Sudoku Solver
 
 A simple Sudoku solver, created from the framework provided by my university.
+Run simply by:
+```bash
+Python3 App.py
+```
 
 ## Sudoku Format
 
@@ -19,11 +23,20 @@ The solver uses the AC-3 constraint satisfaction algorithm initially. If AC-3 al
 Optional heuristics for AC-3 are available to order the arcs. These heuristics include:
 - **MRV (Minimum Remaining Values)**: Prioritizes variables with the fewest legal values left.
 - **Set Fields First**: Prefers working with already set fields.
+As It stands, these heuristics make 0 FUCKING difference, I have no clue why. I suspect it is related to how I handle AC-3 and thhe eventual need to visit all arcs anyway, but idk.
+
+## Benchmarking
+
+Benchmarking is available for the number of arc revisions made for each sudoku, and each heuristic. CSV files will be created in a folder
+named Benchmarks.
+```bash
+Python3 Benchmarker.py
+```
 
 ## Possible Further Improvements & To-Do
 
-1. **Extend user interface**
-   Extend the user interface and functionality of selecting a sudoku so that more than the 5 available sudokus are available to be solved.
+1. **Make Heuristics Actually Matter**
+   Make heuristics actually make a difference, I suspect this is tied to the AC-3 implementation and not the method in which heuristics are calculated.
 
 2. **Create GUI**
    Probably never, but might as well write it here. 
