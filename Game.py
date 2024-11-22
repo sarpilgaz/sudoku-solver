@@ -5,6 +5,20 @@ from Sudoku import Sudoku
 class Game:
 
     def __init__(self, sudoku, h_type, benchmarking_mode):
+        """Fields:
+        arc_queue: Used in case of no heuristic, a simple FIFO queue
+        arc_pqueue: A priority queue, implemented as a minimum heap. Used in case heuristicd are requested
+        h_type: heuristic type: 
+            -1 for no heuristic,
+            0 for MRV only
+            1 for finalized field first only
+            2 for both MRV and finalized field first
+        arc_revisions: integer to track how many times arc revision took place as a result of constraint vşolation
+        benchmark_mode: boolean to control the actual output of functions, such as error reporting or sudoku printing.
+            If True, nothing is ever printed.
+            If false, error reporting and result printing is done.
+        
+        """
         self.arc_queue = Queue()
         self.arc_pqueue = [] # prio queue in case heuristics are used. This will be a list of type tuple (priority, arc).
         self.h_type = h_type
@@ -24,6 +38,7 @@ class Game:
     #functions for AC-3:
 
     def heuristic_picker(self, arc):
+        """Heuristic picker function to calculate a priority value according to the h_type field. Lower value is more prioritized."""
         heuristic_id = self.h_type
         field1, field2 = arc
         domain1_size = field1.get_domain_size()
@@ -33,7 +48,7 @@ class Game:
         if heuristic_id == 0: 
             # Prioritize fields with the smallest non-zero domain sizes
             if domain1_size == 0 and domain2_size == 0:
-                return float('inf')  # Arc involving two pre-assigned fields has the lowest priority
+                return float('inf')
             if domain1_size == 0:
                 return domain2_size
             if domain2_size == 0:
@@ -46,7 +61,7 @@ class Game:
             if domain1_size <= 1 or domain2_size <= 1:
                 return 1  # Top priority for finalized fields
             else:
-                return domain1_size + domain2_size  # Otherwise, prioritize by combined domain size
+                return domain1_size + domain2_size
 
         # Combined Heuristic (Finalized fields + MRV)
         elif heuristic_id == 2: 
@@ -54,14 +69,13 @@ class Game:
             if domain1_size <= 1 or domain2_size <= 1:
                 return 1
             else:
-                # Otherwise, prioritize by MRV
                 if domain1_size == 0:
                     return domain2_size
                 if domain2_size == 0:
                     return domain1_size
                 return min(domain1_size, domain2_size)
 
-        # Default case (no heuristic)
+        # Default case, should never be hit.
         return 1
 
 
@@ -69,11 +83,13 @@ class Game:
     def init_queue(self):
         """
         Init the arc queue with the tuples
+        If heuristics are requested, priority is calculated before pushing to the pqueue.
         """
+        # simply loop over every neighbour of every field and create a arc between them
         for row in range (0,9):
             for col in range (0,9):
                 field = self.sudoku.board[row][col]
-                neighbours = field.get_neighbours()
+                neighbours = field.get_neighbours() 
                 for n in neighbours:
                     arc = (field, n)
                     if self.h_type == -1: # ne heuristic requested
@@ -128,7 +144,8 @@ class Game:
         We need to put back a arc back in the queue even if it may already be present, because after a revision, because:
 
         The reason is that even if an arc is already in the queue, a revision of the domain can potentially make it necessary to revise the same arc again. 
-        For example, reducing the domain of a neighboring variable might require rechecking all arcs involving that variable, even if those arcs are already in the queue.
+        For example, reducing the domain of a neighboring variable might require rechecking all arcs involving that variable, 
+        even if those arcs are already in the queue.
         If you skip adding an arc back, you risk missing necessary domain reductions, leading to an incomplete or incorrect arc consistency check.
         """
         neighbours = arc[0].get_other_neighbours(arc[1])
@@ -157,7 +174,7 @@ class Game:
                 if not self.arc_pqueue:
                     break
                 #we dont need priority anymore
-                priority, current_arc = heapq.heappop(self.arc_pqueue)
+                _, current_arc = heapq.heappop(self.arc_pqueue)
 
             if self.revise(current_arc):
                 if current_arc[0].get_domain_size() == 0:
@@ -213,8 +230,8 @@ class Game:
             if value in n.get_domain():
                 n.remove_from_domain_no_assign(value)
                 changes.append((n, value))
-            
-            if n.get_domain_size() == 0 and len_of_n_domain_before != 0: #It is only a const. violation if the RESULT of the reduction reduces the domain to 0. 
+            #It is only a const. violation if the RESULT of the reduction reduces the domain to 0. 
+            if n.get_domain_size() == 0 and len_of_n_domain_before != 0:
                 self.undo_changes(changes)
                 field.remove_value()
                 return False

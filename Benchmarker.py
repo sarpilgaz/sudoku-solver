@@ -36,7 +36,7 @@ def benchmark() -> None:
         with open(csv_filepath, mode='w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             # Write header row
-            writer.writerow(["Sudoku Number", "Solved?", "Heuristic ID", "Revisions"])
+            writer.writerow(["Sudoku_Number", "Solved", "Heuristic_ID", "Revisions"])
             
             # Loop from -1 to nr_of_heuristics to test each heuristic
             for heuristic in range(-1, nr_of_heuristics):
